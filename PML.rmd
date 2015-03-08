@@ -66,9 +66,10 @@ The optimal model was selected based on Accuracy. This optimal model uses mtry o
 ``` {r echo=FALSE}
 modelFit
 plot(modelFit)
-```
+```  
   
-
+*Fig 1 - Optimal accuracy is mtry 2*  
+  
 ### 5.1 Out of Sample Error
 The model is then applied to the testing data to predict the 'classe' results. The accurary for **Out of Sample Error** is **97.46%**. This is better than our training data and proves that there is no overfitting.  
   
@@ -78,6 +79,27 @@ ptest <- predict(modelFit, testing[,-53])
 confusionMatrix(ptest, testing$classe)  
 ```  
   
+Drawing the confusion matrix table for clarity.  
+``` {r echo=FALSE}
+## Create a data frame from the confusion matrix table
+ctable <- as.data.frame(confusionMatrix(ptest, testing[,53])$table)
+ctable[1:2] <- apply(ctable[1:2], 2, as.character)
+
+## Get the sum of occurence for each classification to calculate the percentage accuracy
+aggr <- aggregate(Freq~Reference, data=ctable, sum)
+colnames(aggr) = c("Reference", "Sum")
+ctable <- merge(ctable, aggr)
+ctable$Percent <- (ctable$Freq/ctable$Sum)*100
+
+## Plot the confusion matrix table
+tile <- ggplot() + geom_tile(aes(x=Reference, y=Prediction, fill=Percent), data=ctable, color="black", size=0.1) + labs(x="Actual", y="Predicted")
+tile <- tile + geom_text(aes(x=Reference, y=Prediction, label=sprintf("%.1f", Percent)), data=ctable, size=7, color="black") + scale_fill_gradient(low="grey", high="red")
+tile <- tile + geom_tile(aes(x=Reference, y=Prediction), data=subset(ctable, as.character(Reference)==as.character(Prediction)), color="black", size=0.5, fill="black", alpha=0)
+tile
+```  
+  
+*Fig 2 - Confusion Matrix table showing percentage accuracy for each classification*
+
 ## 6. Final Prediction - Validation  
 The validation dataset which contains 20 test cases is loaded from the CSV.  
 The same process of data filtering and tidying must be performed on the validation data set before predicting the results.    
